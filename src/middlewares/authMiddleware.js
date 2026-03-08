@@ -19,7 +19,7 @@ module.exports = (req, res, next) => {
         return res.status(401).json({ message: "Token mal formatado." });
     }
 
-    // Verifica se o token é válido e não expirou usando a nossa senha do .env
+    // Verifica se o token é válido e não expirou usando a senha do .env
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(401).json({ message: "Token inválido ou expirado." });
