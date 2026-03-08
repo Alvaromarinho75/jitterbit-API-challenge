@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const orderController = require('../controllers/orderController');
+const orderController = require('../controllers/orderController'); 
+const authMiddleware = require('../middlewares/authMiddleware'); 
+
+// Aplica o middleware de autenticação para TODAS as rotas abaixo desta linha
+router.use(authMiddleware);
 
 // Define a rota POST para criar o pedido
 router.post('/', orderController.createOrder);
