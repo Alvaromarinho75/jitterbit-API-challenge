@@ -2,15 +2,14 @@
 
 Esta é uma API RESTful desenvolvida em Node.js para o desafio prático de Integração de Sistemas da Jitterbit. O objetivo principal do projeto é gerenciar pedidos (CRUD) e realizar o *mapping* (transformação) dos dados de entrada, convertendo o payload recebido em português para um schema estruturado em inglês antes da persistência no banco de dados.
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 - **Node.js** com **Express** (Framework base)
 - **MongoDB** com **Mongoose** (Persistência de dados em formato BSON/JSON)
 - **JSON Web Token (JWT)** (Autenticação e segurança das rotas)
 - **Swagger UI** (Documentação interativa da API)
 - **Dotenv** (Gerenciamento de variáveis de ambiente)
 
-## ✅ Funcionalidades Implementadas
-- [x] Criação de pedido com tradução de campos (PT -> EN).
+## Funcionalidades Implementadas
 - [x] Busca de pedido específico através do `orderId`.
 - [x] Listagem geral de pedidos cadastrados.
 - [x] Atualização de dados de um pedido (`PUT`).
@@ -19,10 +18,10 @@ Esta é uma API RESTful desenvolvida em Node.js para o desafio prático de Integ
 - [x] **Bônus:** Rotas de pedido protegidas por autenticação JWT.
 - [x] **Bônus:** Documentação completa da API via Swagger.
 
-## 🛠️ Como executar o projeto localmente
+## Como executar o projeto localmente
 
 1. Clone este repositório:
-   git clone [https://github.com/SEU_USUARIO/jitterbit-API-challenge.git](https://github.com/SEU_USUARIO/jitterbit-API-challenge.git)
+   git clone [https://github.com/Alvaromarinho75/jitterbit-API-challenge.git](https://github.com/Alvaromarinho75/jitterbit-API-challenge.git)
 
 2. Acesse a pasta do projeto e instale as dependências:
     cd jitterbit-API-challenge
@@ -34,12 +33,12 @@ Esta é uma API RESTful desenvolvida em Node.js para o desafio prático de Integ
 4. Inicie o servidor em modo de desenvolvimento:
     npm run dev
 
-📄 Documentação (Swagger)
+## Documentação (Swagger)
 
 Com a aplicação em execução, acesse a documentação interativa pelo navegador para visualizar todos os endpoints, schemas esperados e testar as requisições:
-👉 http://localhost:3000/api-docs
+http://localhost:3000/api-docs
 
-🔐 Testando a Autenticação
+Testando a Autenticação
 As rotas /order estão protegidas. Para realizar as requisições:
 
 1. Faça um POST em /auth/login enviando as credenciais de teste (username: admin, password: 123456).
