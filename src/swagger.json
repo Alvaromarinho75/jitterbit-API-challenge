@@ -1,0 +1,140 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Jitterbit Order API",
+    "version": "1.0.0",
+    "description": "API para gerenciamento de pedidos - Desafio Técnico"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor Local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Gera o token de acesso",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "admin" },
+                  "password": { "type": "string", "example": "123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Sucesso" },
+          "401": { "description": "Credenciais inválidas" }
+        }
+      }
+    },
+    "/order": {
+      "post": {
+        "summary": "Cria um novo pedido",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "numeroPedido": { "type": "string", "example": "v10089015vdb-01" },
+                  "valorTotal": { "type": "number", "example": 10000 },
+                  "dataCriacao": { "type": "string", "example": "2023-07-19T12:24:11.529Z" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "idItem": { "type": "string", "example": "2434" },
+                        "quantidadeItem": { "type": "number", "example": 1 },
+                        "valorItem": { "type": "number", "example": 1000 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Pedido criado" },
+          "400": { "description": "Erro nos dados enviados" }
+        }
+      }
+    },
+    "/order/list": {
+      "get": {
+        "summary": "Lista todos os pedidos",
+        "responses": {
+          "200": { "description": "Sucesso" }
+        }
+      }
+    },
+    "/order/{id}": {
+      "get": {
+        "summary": "Busca pedido por ID",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Sucesso" },
+          "404": { "description": "Não encontrado" }
+        }
+      },
+      "put": {
+        "summary": "Atualiza um pedido",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "value": { "type": "number", "example": 50000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Atualizado com sucesso" }
+        }
+      },
+      "delete": {
+        "summary": "Deleta um pedido",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Deletado com sucesso" }
+        }
+      }
+    }
+  }
+}

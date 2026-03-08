@@ -21,7 +21,7 @@ const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
         required: true,
-        unique: true // Garante que não teremos dois pedidos com o mesmo número no banco
+        unique: true // Garante que não terá dois pedidos com o mesmo número no banco
     },
     value: {
         type: Number,
@@ -34,5 +34,5 @@ const orderSchema = new mongoose.Schema({
     items: [itemSchema] // O array de itens usando a estrutura criada ali em cima
 });
 
-// Exportamos o modelo para podermos usar nas nossas rotas na próxima fase
+// Exporta o modelo para usar nas rotas na próxima fase
 module.exports = mongoose.model('Order', orderSchema);

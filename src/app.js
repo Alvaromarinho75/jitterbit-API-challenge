@@ -10,12 +10,19 @@ const PORT = process.env.PORT || 3000;
 const orderRoutes = require('./routes/orderRoutes');
 const authRoutes = require('./routes/authRoutes'); 
 
+// Importações do Swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+
 connectDB(); // Conecta ao banco de dados antes de iniciar o servidor
 
 // Middleware para entender JSON no body das requisições
 app.use(express.json());
 
-// Usamos as rotas de pedidos para qualquer requisição que começar com "/order" e as rotas de autenticação para "/auth"
+// Configuração do Swagger para documentação da API
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// É lido como rotas de pedidos qualquer requisição que começar com "/order" e as rotas de autenticação "/auth"
 app.use('/order', orderRoutes);
 app.use('/auth', authRoutes)
 
