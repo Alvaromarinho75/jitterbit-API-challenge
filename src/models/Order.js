@@ -32,8 +32,6 @@ const orderSchema = new mongoose.Schema({
         required: true
     },
     items: [itemSchema] // O array de itens usando a estrutura criada ali em cima
-}, {
-    versionKey: false // Remove aquele campo "__v" que o mongoose cria por padrão
 });
 
 // Exportamos o modelo para podermos usar nas nossas rotas na próxima fase
