@@ -25,7 +25,7 @@ exports.createOrder = async (req, res) => {
         res.status(201).json(savedOrder);
 
     } catch (error) {
-        // Tratamento de erro
+        // Tratamento de erro geral
         res.status(400).json({ 
             message: "Erro ao processar o pedido. Verifique os dados enviados.", 
             error: error.message 
@@ -59,6 +59,52 @@ exports.getOrderById = async (req, res) => {
 
         res.status(200).json(order);
     } catch (error) {
+        // Tratamento de erro geral
         res.status(500).json({ message: "Erro interno ao buscar o pedido.", error: error.message });
+    }
+};
+
+// Função para atualizar um pedido pelo orderId
+exports.updateOrder = async (req, res) => {
+    try {
+        const orderIdParams = req.params.id;
+        const updateData = req.body;
+
+        // Busca pelo orderId, aplica as mudanças e devolve o pedido atualizado. 
+        const updatedOrder = await Order.findOneAndUpdate(
+            { orderId: orderIdParams },
+            updateData,
+            { new: true }
+        );
+
+        // Se não achar o pedido para atualizar, retorna erro 404 (Not Found)
+        if (!updatedOrder) {
+            return res.status(404).json({ message: "Pedido não encontrado para atualização." });
+        }
+
+        res.status(200).json(updatedOrder);
+    } catch (error) {
+        // Tratamento de erro geral
+        res.status(400).json({ message: "Erro ao atualizar o pedido.", error: error.message });
+    }
+};
+
+// Função para deletar um pedido pelo orderId
+exports.deleteOrder = async (req, res) => {
+    try {
+        const orderIdParams = req.params.id;
+
+        // Busca pelo orderId e remove do MongoDB
+        const deletedOrder = await Order.findOneAndDelete({ orderId: orderIdParams });
+        
+        // Se não achar o pedido para deletar, retorna erro 404 (Not Found)
+        if (!deletedOrder) {
+            return res.status(404).json({ message: "Pedido não encontrado para exclusão." });
+        }
+
+        res.status(200).json({ message: `Pedido ${orderIdParams} deletado com sucesso!` });
+    } catch (error) {
+        // Tratamento de erro geral
+        res.status(500).json({ message: "Erro ao deletar o pedido.", error: error.message });
     }
 };
