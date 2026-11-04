@@ -30,7 +30,7 @@ before(async () => {
     // Always create a new test-only database. Never read MONGO_URI or .env here.
     mongo = await MongoMemoryServer.create({
         binary: { version: '8.2.6', downloadDir: resolve(__dirname, '../.cache/mongodb') },
-        instance: { ip: '127.0.0.1', dbName: 'orders-integration' },
+        instance: { ip: '127.0.0.1', dbName: 'orders-integration', launchTimeout: 60000 },
     });
     config = { ...getConfig({ MONGO_URI: mongo.getUri(), JWT_SECRET: randomBytes(48).toString('hex'), AUTH_USERNAME: 'test-user', AUTH_PASSWORD: 'fictional-test-password' }), port: 0 };
     server = await startServer(config, { logger: { error: (...args) => loggedErrors.push(args) } });
