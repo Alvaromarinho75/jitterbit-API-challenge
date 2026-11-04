@@ -1,38 +1,23 @@
+'use strict';
 const mongoose = require('mongoose');
 
-// Esquema dos itens
+const finite = { validator: Number.isFinite, message: 'Informe um número finito.' };
+const positiveInteger = { validator: value => Number.isSafeInteger(value) && value > 0, message: 'Informe um inteiro positivo seguro.' };
 const itemSchema = new mongoose.Schema({
-    productId: {
-        type: Number,
-        required: true
-    },
-    quantity: {
-        type: Number,
-        required: true
-    },
-    price: {
-        type: Number,
-        required: true
-    }
-});
+    productId: { type: Number, required: true, validate: positiveInteger },
+    quantity: { type: Number, required: true, validate: positiveInteger },
+    price: { type: Number, required: true, min: 0, validate: finite },
+}, { strict: 'throw' });
 
-// Esquema dos pedidos
 const orderSchema = new mongoose.Schema({
-    orderId: {
-        type: String,
+    orderId: { type: String, required: true, unique: true, immutable: true, maxlength: 100 },
+    value: { type: Number, required: true, min: 0, validate: finite },
+    creationDate: { type: Date, required: true },
+    items: {
+        type: [itemSchema],
         required: true,
-        unique: true // Garante que não terá dois pedidos com o mesmo número no banco
+        validate: { validator: value => value.length >= 1 && value.length <= 100, message: 'Informe de 1 a 100 itens.' },
     },
-    value: {
-        type: Number,
-        required: true
-    },
-    creationDate: {
-        type: Date,
-        required: true
-    },
-    items: [itemSchema] // O array de itens usando a estrutura criada ali em cima
-});
+}, { strict: 'throw', bufferCommands: false });
 
-// Exporta o modelo para usar nas rotas na próxima fase
 module.exports = mongoose.model('Order', orderSchema);

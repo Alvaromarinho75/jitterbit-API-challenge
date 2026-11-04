@@ -1,15 +1,12 @@
+'use strict';
 const mongoose = require('mongoose');
-require('dotenv').config(); // Carrega o arquivo .env
+const Order = require('../models/Order');
 
-const connectDB = async () => {
-    try {
-        // Tenta conectar no banco usando a URL que está no .env
-        const conn = await mongoose.connect(process.env.MONGO_URI);
-        console.log(`MongoDB Conectado: ${conn.connection.host}`);
-    } catch (error) {
-        console.error(`Erro ao conectar no MongoDB: ${error.message}`);
-        process.exit(1); // Para o servidor se der erro na conexão com o banco
-    }
-};
+async function connectDB(uri) {
+    await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+    // unique is a database index, not a Mongoose validator. Wait for it as well.
+    await Order.init();
+    return mongoose.connection;
+}
 
 module.exports = connectDB;

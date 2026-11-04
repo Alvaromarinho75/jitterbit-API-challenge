@@ -1,8 +1,16 @@
+'use strict';
 const express = require('express');
-const router = express.Router();
-const authController = require('../controllers/authController');
+const { rateLimit } = require('express-rate-limit');
+const { login } = require('../controllers/authController');
 
-// Rota POST para fazer login e receber o JWT
-router.post('/login', authController.login);
-
-module.exports = router;
+module.exports = function createAuthRoutes({ loginLimit = 10 } = {}) {
+    const router = express.Router();
+    router.post('/login', rateLimit({
+        windowMs: 60_000,
+        limit: loginLimit,
+        standardHeaders: 'draft-8',
+        legacyHeaders: false,
+        message: { message: 'Muitas tentativas de login. Tente novamente em um minuto.' },
+    }), login);
+    return router;
+};

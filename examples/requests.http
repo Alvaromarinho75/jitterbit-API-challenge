@@ -1,0 +1,49 @@
+### Use with an HTTP client that supports .http files (for example, REST Client).
+### Set the password locally. Do not commit real values or paste tokens into Git.
+@baseUrl = http://127.0.0.1:3000
+@username = demo
+@password = REPLACE_LOCALLY_WITH_YOUR_AUTH_PASSWORD
+
+### Connection readiness (no token)
+GET {{baseUrl}}/health
+
+### Login — the following requests use this response's token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### Create a fictional order (PT input, EN stored output)
+POST {{baseUrl}}/order
+Authorization: Bearer {{login.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "numeroPedido": "v10089015vdb-01",
+  "valorTotal": 10000,
+  "dataCriacao": "2023-07-19T12:24:11.529Z",
+  "items": [{ "idItem": "2434", "quantidadeItem": 1, "valorItem": 1000 }]
+}
+
+### List
+GET {{baseUrl}}/order/list
+Authorization: Bearer {{login.response.body.$.token}}
+
+### Read
+GET {{baseUrl}}/order/v10089015vdb-01
+Authorization: Bearer {{login.response.body.$.token}}
+
+### Partial update (EN input; identifier remains unchanged)
+PUT {{baseUrl}}/order/v10089015vdb-01
+Authorization: Bearer {{login.response.body.$.token}}
+Content-Type: application/json
+
+{ "value": 50000 }
+
+### Delete only the fictional order above
+DELETE {{baseUrl}}/order/v10089015vdb-01
+Authorization: Bearer {{login.response.body.$.token}}
