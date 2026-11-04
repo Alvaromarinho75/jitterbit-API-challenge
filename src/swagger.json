@@ -1,14 +1,25 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.3",
   "info": {
-    "title": "Jitterbit Order API",
-    "version": "1.0.0",
-    "description": "API para gerenciamento de pedidos - Desafio Técnico"
+    "title": "Jitterbit Order API — projeto pessoal",
+    "version": "1.1.0",
+    "description": "Exercício de API de pedidos com mapping PT → EN, autenticação demonstrativa de uma conta e MongoDB. Projeto pessoal baseado em desafio técnico; não é uma API oficial da Jitterbit, implantação comercial ou sistema de usuários completo. Use dados fictícios. O total informado é armazenado, sem inferir moeda, reconciliar ou recalcular os itens."
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
-      "description": "Servidor Local"
+      "url": "/",
+      "description": "Servidor que está servindo esta documentação"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Status"
+    },
+    {
+      "name": "Autenticação"
+    },
+    {
+      "name": "Pedidos"
     }
   ],
   "components": {
@@ -18,6 +29,329 @@
         "scheme": "bearer",
         "bearerFormat": "JWT"
       }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "field",
+                "message"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Login": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "example": "demo"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "format": "password",
+            "description": "A senha configurada localmente em AUTH_PASSWORD, nunca uma credencial fixa do código."
+          }
+        }
+      },
+      "Token": {
+        "type": "object",
+        "required": [
+          "token",
+          "message"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateOrder": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "numeroPedido",
+          "valorTotal",
+          "dataCriacao",
+          "items"
+        ],
+        "properties": {
+          "numeroPedido": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Identificador imutável. list é reservado, sem diferenciar maiúsculas/minúsculas.",
+            "example": "v10089015vdb-01"
+          },
+          "valorTotal": {
+            "type": "number",
+            "minimum": 0
+          },
+          "dataCriacao": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data/hora existente em ISO 8601, com segundos e fuso explícito; até 3 casas de milissegundos.",
+            "example": "2023-07-19T12:24:11.529Z"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CreateItem"
+            }
+          }
+        },
+        "example": {
+          "numeroPedido": "v10089015vdb-01",
+          "valorTotal": 10000,
+          "dataCriacao": "2023-07-19T12:24:11.529Z",
+          "items": [
+            {
+              "idItem": "2434",
+              "quantidadeItem": 1,
+              "valorItem": 1000
+            }
+          ]
+        }
+      },
+      "CreateItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "idItem",
+          "quantidadeItem",
+          "valorItem"
+        ],
+        "properties": {
+          "idItem": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            ],
+            "description": "Identificador numérico positivo seguro. Strings decimais são normalizadas para número.",
+            "example": "2434"
+          },
+          "quantidadeItem": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "valorItem": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "UpdateItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "productId",
+          "quantity",
+          "price"
+        ],
+        "properties": {
+          "productId": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            ],
+            "description": "Identificador numérico positivo seguro. Strings decimais são normalizadas para número.",
+            "example": "2434"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "StoredItem": {
+        "type": "object",
+        "required": [
+          "productId",
+          "quantity",
+          "price"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "productId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "UpdateOrder": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "value": {
+            "type": "number",
+            "minimum": 0
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data/hora existente em ISO 8601, com segundos e fuso explícito; até 3 casas de milissegundos.",
+            "example": "2023-07-19T12:24:11.529Z"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/UpdateItem"
+            }
+          }
+        },
+        "description": "PUT parcial preservado por compatibilidade. Aceita apenas campos em inglês; orderId e operadores MongoDB não são permitidos. Não recalcula o total.",
+        "example": {
+          "value": 50000
+        }
+      },
+      "Order": {
+        "type": "object",
+        "required": [
+          "orderId",
+          "value",
+          "creationDate",
+          "items"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "__v": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "orderId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Identificador imutável. list é reservado, sem diferenciar maiúsculas/minúsculas.",
+            "example": "v10089015vdb-01"
+          },
+          "value": {
+            "type": "number",
+            "minimum": 0
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data/hora existente em ISO 8601, com segundos e fuso explícito; até 3 casas de milissegundos.",
+            "example": "2023-07-19T12:24:11.529Z"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/StoredItem"
+            }
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": [
+          "status",
+          "database"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unavailable"
+            ]
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "connected",
+              "disconnected"
+            ]
+          }
+        }
+      },
+      "Deleted": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "security": [
@@ -26,113 +360,509 @@
     }
   ],
   "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Confere o estado da conexão com o banco",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Conexão ativa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Conexão indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
-        "summary": "Gera o token de acesso",
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Gera JWT com validade de uma hora",
+        "description": "Conta única definida no ambiente. Dez tentativas por IP/minuto, em memória por processo. Não há cadastro, refresh token ou revogação de sessão.",
         "security": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "username": { "type": "string", "example": "admin" },
-                  "password": { "type": "string", "example": "123456" }
-                }
+                "$ref": "#/components/schemas/Login"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Sucesso" },
-          "401": { "description": "Credenciais inválidas" }
+          "200": {
+            "description": "Token emitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON inválido ou falha de validação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ou token inválidos/ausentes/expirados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Corpo acima de 100 KB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Mais de 10 tentativas de login por IP em um minuto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno; detalhes internos não são enviados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
     "/order": {
       "post": {
-        "summary": "Cria um novo pedido",
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Cria pedido e transforma os campos de entrada para inglês",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "numeroPedido": { "type": "string", "example": "v10089015vdb-01" },
-                  "valorTotal": { "type": "number", "example": 10000 },
-                  "dataCriacao": { "type": "string", "example": "2023-07-19T12:24:11.529Z" },
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "idItem": { "type": "string", "example": "2434" },
-                        "quantidadeItem": { "type": "number", "example": 1 },
-                        "valorItem": { "type": "number", "example": 1000 }
-                      }
-                    }
-                  }
-                }
+                "$ref": "#/components/schemas/CreateOrder"
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Pedido criado" },
-          "400": { "description": "Erro nos dados enviados" }
+          "201": {
+            "description": "Pedido persistido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "Caminho do pedido criado.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON inválido ou falha de validação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ou token inválidos/ausentes/expirados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "numeroPedido duplicado (índice único).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Corpo acima de 100 KB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno; detalhes internos não são enviados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
     "/order/list": {
       "get": {
-        "summary": "Lista todos os pedidos",
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Lista pedidos ordenados por orderId",
+        "description": "Mantém a resposta em array do exercício original. Sem paginação; destinada a conjuntos pequenos de demonstração.",
         "responses": {
-          "200": { "description": "Sucesso" }
+          "200": {
+            "description": "Pedidos disponíveis.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ou token inválidos/ausentes/expirados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno; detalhes internos não são enviados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
     "/order/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Identificador imutável. list é reservado, sem diferenciar maiúsculas/minúsculas.",
+            "example": "v10089015vdb-01"
+          }
+        }
+      ],
       "get": {
-        "summary": "Busca pedido por ID",
-        "parameters": [
-          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        "tags": [
+          "Pedidos"
         ],
+        "summary": "Busca por orderId",
         "responses": {
-          "200": { "description": "Sucesso" },
-          "404": { "description": "Não encontrado" }
+          "200": {
+            "description": "Pedido encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON inválido ou falha de validação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ou token inválidos/ausentes/expirados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pedido ou rota não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno; detalhes internos não são enviados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       },
       "put": {
-        "summary": "Atualiza um pedido",
-        "parameters": [
-          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        "tags": [
+          "Pedidos"
         ],
+        "summary": "Atualiza campos em inglês, parcialmente",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "value": { "type": "number", "example": 50000 }
-                }
+                "$ref": "#/components/schemas/UpdateOrder"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Atualizado com sucesso" }
+          "200": {
+            "description": "Pedido atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON inválido ou falha de validação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ou token inválidos/ausentes/expirados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pedido ou rota não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Corpo acima de 100 KB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno; detalhes internos não são enviados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       },
       "delete": {
-        "summary": "Deleta um pedido",
-        "parameters": [
-          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        "tags": [
+          "Pedidos"
         ],
+        "summary": "Exclui por orderId",
         "responses": {
-          "200": { "description": "Deletado com sucesso" }
+          "200": {
+            "description": "Pedido excluído.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON inválido ou falha de validação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ou token inválidos/ausentes/expirados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pedido ou rota não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno; detalhes internos não são enviados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     }
